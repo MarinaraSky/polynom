@@ -20,9 +20,4 @@ double poly_eval(const polynomial *p, double x);
 polynomial *poly_add(const polynomial *a, const polynomial *b);
 polynomial *poly_sub(const polynomial *a, const polynomial *b);
 
-int count_unique(const polynomial *a, const polynomial *b);
-int *get_vals(const polynomial *a);
-polynomial *array_sum(int *a_array, int *b_array, int num_of_unique);
-polynomial *array_diff(int *a_array, int *b_array, int num_of_unique);
-
 #endif

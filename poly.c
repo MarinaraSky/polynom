@@ -1,14 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "poly.h"
+
+static int *count_unique(const polynomial *a, const polynomial *b);
+static int *get_vals(const polynomial *a);
+static polynomial *array_sum(int *a_array, int *b_array, int *num_of_unique, int max_x);
+static polynomial *array_diff(int *a_array, int *b_array, int *num_of_unique, int max_x);
+//static int get_size(const polynomial *a);
+static int get_high_x(const polynomial *a, const polynomial *b);
+static void poly_file_print(const polynomial *eqn, FILE *hide_me);
 
 term *term_create(int coeff, unsigned exp)
 {
-    if(exp > 9)
-    {
-        printf("Polynomials above x\u2079 only available in PREMIUM version.\n");
-        return NULL;
-    }
     term *node = malloc(sizeof(*node));
     if(node)
     {
@@ -42,12 +46,20 @@ void poly_print(const polynomial *eqn)
     {
         if(first == 0)
         {
-            printf("%c%d", eqn->coeff > 0 ? '\0' : '\0', eqn->coeff);
+            printf("%d", eqn->coeff);
             first++;
         }
         else
         {
-            printf("\b%c%d", eqn->coeff > 0 ? '+' : '\0', eqn->coeff);
+            if(eqn->coeff > 0)
+            {
+                printf("+%d", eqn->coeff); 
+            }
+            else
+            {
+                printf("%d", eqn->coeff); 
+            
+            }
         }
         if(eqn->exp > 1)
         {
@@ -57,18 +69,18 @@ void poly_print(const polynomial *eqn)
         {
            printf("x"); 
         }
-        printf(" ");
     }
     poly_print(eqn->next);
 }
 
 polynomial *poly_add(const polynomial *a, const polynomial *b)
 {
-    int count = count_unique(a, b);
+    int *count = count_unique(a, b);
     int *values_of_a = get_vals(a);
     int *values_of_b = get_vals(b);
+    int max_x = get_high_x(a, b);
 
-    polynomial *sum_of_poly = array_sum(values_of_a, values_of_b, count); 
+    polynomial *sum_of_poly = array_sum(values_of_a, values_of_b, count, max_x); 
 
     free(values_of_a);
     free(values_of_b);
@@ -77,11 +89,12 @@ polynomial *poly_add(const polynomial *a, const polynomial *b)
 
 polynomial *poly_sub(const polynomial *a, const polynomial *b)
 {
-    int count = count_unique(a, b);
+    int *count = count_unique(a, b);
     int *values_of_a = get_vals(a);
     int *values_of_b = get_vals(b);
+    int max_x = get_high_x(a, b);
 
-    polynomial *diff_of_poly = array_diff(values_of_a, values_of_b, count); 
+    polynomial *diff_of_poly = array_diff(values_of_a, values_of_b, count, max_x); 
 
     free(values_of_a);
     free(values_of_b);
@@ -89,88 +102,181 @@ polynomial *poly_sub(const polynomial *a, const polynomial *b)
 
 }
 
-polynomial *array_diff(int *a_array, int *b_array, int num_of_unique)
+bool poly_equal(const polynomial *a, const polynomial *b)
 {
-    int j = num_of_unique;
-    int *array_of_sums = calloc(sizeof(int), num_of_unique + 1);
+    const polynomial *tmp_a = a;
+    const polynomial *tmp_b = b;
 
-    for(int i = 10; i >= 0; i--)
+    while(tmp_a != NULL)
+    {
+        if(tmp_a->coeff != tmp_b->coeff && tmp_a->exp != tmp_b->exp)
+        {
+            return false;
+        }
+        tmp_a = tmp_a->next;
+        tmp_b = tmp_b->next; }
+    tmp_a = a;
+    tmp_b = b;
+    while(tmp_b != NULL)
+    {
+        if(tmp_b->coeff != tmp_a->coeff && tmp_b->exp != tmp_a->exp)
+        {
+            return false;
+        }
+        tmp_b = tmp_b->next;
+        tmp_a = tmp_a->next;
+    }
+    return true;
+}
+
+double poly_eval(const polynomial *p, double x)
+{
+    double total = 0;
+
+    while(p != NULL)
+    {
+        int tmp = 0;
+        tmp = pow(x, p->exp);
+        tmp *= p->coeff;
+        total += tmp;
+        p = p->next;
+    }
+    return total;
+}
+
+char *poly_to_string(const polynomial *p)
+{
+    FILE *hide_me = fopen("/tmp/.hide_me", "wb+");
+    char *poly_string= NULL;
+    poly_file_print(p, hide_me);
+    fseek(hide_me, 0, SEEK_END);
+    long length = ftell(hide_me);
+    length++;
+    fseek(hide_me, 0, SEEK_SET);
+    poly_string = malloc(length + 1);
+    poly_string[length] = 0;
+    fgets(poly_string, length, hide_me);
+    fclose(hide_me);
+    return poly_string;
+}
+
+static void poly_file_print(const polynomial *eqn, FILE *hide_me)
+{
+    
+    if(!eqn)
+    {
+        first = 0;
+        return;
+    }
+    if(eqn->coeff)
+    {
+        if(first == 0)
+        {
+            fprintf(hide_me, "%d", eqn->coeff);
+            first++;
+        }
+        else
+        {
+            if(eqn->coeff > 0)
+            {
+                fprintf(hide_me, "+%d", eqn->coeff); 
+            }
+            else
+            {
+                fprintf(hide_me, "%d", eqn->coeff); 
+            }
+        }
+        if(eqn->exp > 1)
+        {
+            fprintf(hide_me, "x^%d", eqn->exp);
+        }
+        else if(eqn->exp == 1)
+        {
+           fprintf(hide_me, "x"); 
+        }
+    }
+    poly_file_print(eqn->next, hide_me);
+}
+
+static polynomial *array_diff(int *a_array, int *b_array, int *num_of_unique, int max_x)
+{
+    int *array_of_sums = calloc(sizeof(int), max_x + 1);
+
+    for(int i = max_x; i >= 0; i--)
     {
         if(a_array[i] != 0 && b_array[i] != 0)
         {
-            array_of_sums[j] = a_array[i] - b_array[i];
-            j--;
+            array_of_sums[i] = a_array[i] - b_array[i];
         }
         else if(a_array[i] != 0)
         {
-            array_of_sums[j] = a_array[i];
-            j--;
+            array_of_sums[i] = a_array[i];
         }
         else if(b_array[i] != 0)
         {
-            array_of_sums[j] = b_array[i];
-            j--;
+            array_of_sums[i] = 0 - b_array[i];
         }
     }
 
     polynomial *result = term_create(0, 0);
+    term *tmp = NULL;
     term *put_tracker = result;
-    for(int i = num_of_unique; i > 0; i--)
+    for(int i = max_x; i >= 0; i--)
     {
-        term *tmp = term_create(array_of_sums[i], i - 1);
+        tmp = term_create(array_of_sums[i], num_of_unique[i]);
         put_tracker->next = tmp;
         put_tracker = tmp;
     }
+    free(num_of_unique);
     free(array_of_sums);
     return result;
 }
 
-polynomial *array_sum(int *a_array, int *b_array, int num_of_unique)
+static polynomial *array_sum(int *a_array, int *b_array, int *num_of_unique, int max_x)
 {
-    int j = num_of_unique;
-    int *array_of_sums = calloc(sizeof(int), num_of_unique + 1);
+    int *array_of_sums = calloc(sizeof(int), max_x + 1);
 
-    for(int i = 10; i >= 0; i--)
+    for(int i = max_x; i >= 0; i--)
     {
         if(a_array[i] != 0 && b_array[i] != 0)
         {
-            array_of_sums[j] = a_array[i] + b_array[i];
-            j--;
+            array_of_sums[i] = a_array[i] + b_array[i];
         }
         else if(a_array[i] != 0)
         {
-            array_of_sums[j] = a_array[i];
-            j--;
+            array_of_sums[i] = a_array[i];
         }
         else if(b_array[i] != 0)
         {
-            array_of_sums[j] = b_array[i];
-            j--;
+            array_of_sums[i] = b_array[i];
         }
     }
 
     polynomial *result = term_create(0, 0);
+    term *tmp = NULL;
     term *put_tracker = result;
-    for(int i = num_of_unique; i > 0; i--)
+    for(int i = max_x; i >= 0; i--)
     {
-        term *tmp = term_create(array_of_sums[i], i - 1);
-        put_tracker->next = tmp;
-        put_tracker = tmp;
+        if(array_of_sums[i] != 0)
+        {
+            tmp = term_create(array_of_sums[i], num_of_unique[i]);
+            put_tracker->next = tmp;
+            put_tracker = tmp;
+        }
     }
+    free(num_of_unique);
     free(array_of_sums);
     return result;
 }
 
-int count_unique(const polynomial *a, const polynomial *b)
+static int *count_unique(const polynomial *a, const polynomial *b)
 {
-    int unique[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    int count = 0;
+    int *unique = calloc(get_high_x(a, b) + 1, sizeof(int));
     while(a != NULL)
     {
         if(unique[a->exp] == 0)
         {
-            count++;
-            unique[a->exp] = 1;
+            unique[a->exp] = a->exp;
         }
         a = a->next;
     }
@@ -178,31 +284,64 @@ int count_unique(const polynomial *a, const polynomial *b)
     {
         if(unique[b->exp] == 0)
         {
-            count++;
-            unique[b->exp] = 1;
+            unique[b->exp] = b->exp;
         }
         b = b->next;
     }
 
-    return count;
+    return unique;
 }
 
-int *get_vals(const polynomial *a)
+static int get_high_x(const polynomial *a, const polynomial *b)
 {
-    int *vals = calloc(sizeof(int), 11);
+    unsigned max_x = 0;
+    while(a != NULL)
+    {
+        if(a->exp > max_x)
+        {
+            max_x = a->exp;
+        }
+        a = a->next;
+    }
+    while(b != NULL)
+    {
+        if(b->exp > max_x)
+        {
+            max_x = b->exp;
+        }
+        b = b->next;
+    }
+    return max_x;
+}
+
+static int *get_vals(const polynomial *a)
+{
+    int *vals = calloc(sizeof(int), 512);
     while(a != NULL)
     {
         if(a->coeff != 0)
         {
-            vals[a->exp] = a->coeff;
+            vals[a->exp] = vals[a->exp] + a->coeff;
         }
         a = a->next;
     }
     return vals;
 }
 
+/*
+static int get_size(const polynomial *a)
+{
+    int count = 0;
+    while(a != NULL)
+    {
+        count++;
+        a = a->next;
+    }
+    return count;
+}
 
 
+*/
 
 
 
