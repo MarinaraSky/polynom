@@ -109,7 +109,7 @@ bool poly_equal(const polynomial *a, const polynomial *b)
 
     while(tmp_a != NULL)
     {
-        if(tmp_a->coeff != tmp_b->coeff && tmp_a->exp != tmp_b->exp)
+        if(tmp_a->coeff != tmp_b->coeff || tmp_a->exp != tmp_b->exp)
         {
             return false;
         }
@@ -118,12 +118,13 @@ bool poly_equal(const polynomial *a, const polynomial *b)
             return false;
         }
         tmp_a = tmp_a->next;
-        tmp_b = tmp_b->next; }
+        tmp_b = tmp_b->next; 
+    }
     tmp_a = a;
     tmp_b = b;
     while(tmp_b != NULL)
     {
-        if(tmp_b->coeff != tmp_a->coeff && tmp_b->exp != tmp_a->exp)
+        if(tmp_b->coeff != tmp_a->coeff || tmp_b->exp != tmp_a->exp)
         {
             return false;
         }
@@ -175,6 +176,35 @@ void poly_iterate(polynomial *p, void (*transform)(term*))
         transform(p);
         p = p->next;
     }
+}
+
+polynomial *poly_mult(const polynomial *a, const polynomial *b)
+{
+    const polynomial *tmp_a = a;
+    const polynomial *tmp_b = b;
+    polynomial *answer = term_create(0, 0);
+    polynomial *tmp_b_mul = calloc(sizeof(term*), 1);
+    while(tmp_a != NULL)
+    {
+       while(tmp_b != NULL)
+       {
+           int tmp_coeff = tmp_a->coeff * tmp_b->coeff;
+           int tmp_exp = tmp_a->exp + tmp_b->exp;
+           if(tmp_coeff == 0)
+           {
+                tmp_b = tmp_b->next;
+                continue;
+           }
+           tmp_b_mul = term_create(tmp_coeff, tmp_exp);
+           answer = poly_add(answer, tmp_b_mul);
+           tmp_b = tmp_b->next;
+       }
+       tmp_b = b;
+       tmp_a = tmp_a->next;
+    }
+
+    return answer;
+    
 }
 
 static void poly_file_print(const polynomial *eqn, FILE *hide_me)

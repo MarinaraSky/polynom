@@ -19,5 +19,6 @@ bool poly_equal(const polynomial *a, const polynomial *b);
 double poly_eval(const polynomial *p, double x);
 polynomial *poly_add(const polynomial *a, const polynomial *b);
 polynomial *poly_sub(const polynomial *a, const polynomial *b);
+polynomial *poly_mult(const polynomial *a, const polynomial *b);
 
 #endif
