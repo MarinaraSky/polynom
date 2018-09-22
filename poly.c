@@ -160,6 +160,15 @@ char *poly_to_string(const polynomial *p)
     return poly_string;
 }
 
+void poly_iterate(polynomial *p, void (*transform)(term*))
+{
+    while(p != NULL)
+    {
+        transform(p);
+        p = p->next;
+    }
+}
+
 static void poly_file_print(const polynomial *eqn, FILE *hide_me)
 {
     

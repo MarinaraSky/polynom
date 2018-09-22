@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include "poly.h"
 
+void triple(term *p)
+{
+    p->coeff *= 3;
+}
+
 int main(void)
 {
     term *nox = term_create(6, 0);
@@ -11,7 +16,7 @@ int main(void)
     term *noy = term_create(5, 0);
     term *y = term_create(2, 1);
     term *y2 = term_create(-6, 2);
-    term *y3 = term_create(5, 3);
+    term *y3 = term_create(-5, 100);
     
     term *eval = term_create(2, 2);
 
@@ -75,12 +80,19 @@ int main(void)
     printf("Sub: ");
     poly_print(new);
     printf("\n");
-    printf("%f\n", poly_eval(y3, 2));
+    printf("Evaluated: %f\n", poly_eval(y3, 2));
     //poly_destroy(test);
     //poly_destroy(nobreak11);
     char *array = NULL;
     array = poly_to_string(new);
     printf("String: %s\n", array);
+    printf("Pre Iter: ");
+    poly_print(y3);
+    printf("\n");
+    printf("Post Iter: ");
+    poly_iterate(y3, triple);
+    poly_print(y3);
+    printf("\n");
     free(array);
     poly_destroy(nobreak11);
     poly_destroy(test);
