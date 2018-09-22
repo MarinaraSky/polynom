@@ -113,6 +113,10 @@ bool poly_equal(const polynomial *a, const polynomial *b)
         {
             return false;
         }
+        if(tmp_b->next == NULL && tmp_a->next != NULL)
+        {
+            return false;
+        }
         tmp_a = tmp_a->next;
         tmp_b = tmp_b->next; }
     tmp_a = a;
@@ -120,6 +124,10 @@ bool poly_equal(const polynomial *a, const polynomial *b)
     while(tmp_b != NULL)
     {
         if(tmp_b->coeff != tmp_a->coeff && tmp_b->exp != tmp_a->exp)
+        {
+            return false;
+        }
+        if(tmp_a->next == NULL && tmp_b->next != NULL)
         {
             return false;
         }
