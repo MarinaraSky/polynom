@@ -3,12 +3,17 @@
 #include <math.h>
 #include "poly.h"
 
+/* Counts how many unique exponents there are in both polynomials */
 static int *count_unique(const polynomial *a, const polynomial *b);
+/* Returns array of coeffs where the position in the array is the power */
 static int *get_vals(const polynomial *a);
+/* Addition of two coeff arrays and returns the polynomial */
 static polynomial *array_sum(int *a_array, int *b_array, int *num_of_unique, int max_x);
+/* Subtraction of two coeff arrays and returns the polynomial */
 static polynomial *array_diff(int *a_array, int *b_array, int *num_of_unique, int max_x);
-//static int get_size(const polynomial *a);
+/* Finds the highest value of x in either polynomials for arrays */
 static int get_high_x(const polynomial *a, const polynomial *b);
+/* Prints polynomial as text to file for easy read in as string */
 static void poly_file_print(const polynomial *eqn, FILE *hide_me);
 
 term *term_create(int coeff, unsigned exp)
@@ -183,7 +188,7 @@ polynomial *poly_mult(const polynomial *a, const polynomial *b)
     const polynomial *tmp_a = a;
     const polynomial *tmp_b = b;
     polynomial *answer = term_create(0, 0);
-    polynomial *tmp_b_mul = calloc(sizeof(term*), 1);
+    polynomial *tmp_mul = term_create(1, 0);
     while(tmp_a != NULL)
     {
        while(tmp_b != NULL)
@@ -195,16 +200,34 @@ polynomial *poly_mult(const polynomial *a, const polynomial *b)
                 tmp_b = tmp_b->next;
                 continue;
            }
-           tmp_b_mul = term_create(tmp_coeff, tmp_exp);
-           answer = poly_add(answer, tmp_b_mul);
+           polynomial *old = tmp_mul;
+           tmp_mul = term_create(tmp_coeff, tmp_exp);
+           poly_destroy(old);
+           old = answer;
+           answer = poly_add(answer, tmp_mul);
+           poly_destroy(old);
            tmp_b = tmp_b->next;
        }
        tmp_b = b;
        tmp_a = tmp_a->next;
     }
-
+    poly_destroy(tmp_mul);
     return answer;
     
+}
+
+polynomial *poly_pow(const polynomial *a, unsigned e)
+{
+    polynomial *answer = term_create(1, 0);
+    polynomial *old = answer;
+    for(unsigned i = 0; i < e; i++)
+    {
+        old = answer;
+        answer = poly_mult(answer, a);
+        poly_destroy(old);
+
+    }
+    return answer;
 }
 
 static void poly_file_print(const polynomial *eqn, FILE *hide_me)
@@ -248,6 +271,10 @@ static void poly_file_print(const polynomial *eqn, FILE *hide_me)
 static polynomial *array_diff(int *a_array, int *b_array, int *num_of_unique, int max_x)
 {
     int *array_of_sums = calloc(sizeof(int), max_x + 1);
+    if(array_of_sums == NULL)
+    {
+        return NULL;
+    }
 
     for(int i = max_x; i >= 0; i--)
     {
@@ -282,6 +309,10 @@ static polynomial *array_diff(int *a_array, int *b_array, int *num_of_unique, in
 static polynomial *array_sum(int *a_array, int *b_array, int *num_of_unique, int max_x)
 {
     int *array_of_sums = calloc(sizeof(int), max_x + 1);
+    if(array_of_sums == NULL)
+    {
+        return NULL;
+    }
 
     for(int i = max_x; i >= 0; i--)
     {
@@ -319,6 +350,10 @@ static polynomial *array_sum(int *a_array, int *b_array, int *num_of_unique, int
 static int *count_unique(const polynomial *a, const polynomial *b)
 {
     int *unique = calloc(get_high_x(a, b) + 1, sizeof(int));
+    if(unique == NULL)
+    {
+        return NULL;
+    }
     while(a != NULL)
     {
         if(unique[a->exp] == 0)
@@ -364,6 +399,10 @@ static int get_high_x(const polynomial *a, const polynomial *b)
 static int *get_vals(const polynomial *a)
 {
     int *vals = calloc(sizeof(int), 512);
+    if(vals == NULL)
+    {
+        return NULL;
+    }
     while(a != NULL)
     {
         if(a->coeff != 0)
@@ -374,28 +413,3 @@ static int *get_vals(const polynomial *a)
     }
     return vals;
 }
-
-/*
-static int get_size(const polynomial *a)
-{
-    int count = 0;
-    while(a != NULL)
-    {
-        count++;
-        a = a->next;
-    }
-    return count;
-}
-
-
-*/
-
-
-
-
-
-
-
-
-
-
