@@ -3,11 +3,17 @@
 #include <math.h>
 #include "poly.h"
 
+/* Counts how many unique exponents there are in both polynomials */
 static int *count_unique(const polynomial *a, const polynomial *b);
+/* Returns array of coeffs where the position in the array is the power */
 static int *get_vals(const polynomial *a);
+/* Addition of two coeff arrays and returns the polynomial */
 static polynomial *array_sum(int *a_array, int *b_array, int *num_of_unique, int max_x);
+/* Subtraction of two coeff arrays and returns the polynomial */
 static polynomial *array_diff(int *a_array, int *b_array, int *num_of_unique, int max_x);
+/* Finds the highest value of x in either polynomials for arrays */
 static int get_high_x(const polynomial *a, const polynomial *b);
+/* Prints polynomial as text to file for easy read in as string */
 static void poly_file_print(const polynomial *eqn, FILE *hide_me);
 
 term *term_create(int coeff, unsigned exp)
