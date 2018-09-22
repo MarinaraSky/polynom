@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "poly.h"
 
 static int *count_unique(const polynomial *a, const polynomial *b);
@@ -183,7 +184,7 @@ polynomial *poly_mult(const polynomial *a, const polynomial *b)
     const polynomial *tmp_a = a;
     const polynomial *tmp_b = b;
     polynomial *answer = term_create(0, 0);
-    polynomial *tmp_b_mul = calloc(sizeof(term*), 1);
+    polynomial *tmp_mul = calloc(sizeof(term), 1);
     while(tmp_a != NULL)
     {
        while(tmp_b != NULL)
@@ -195,16 +196,34 @@ polynomial *poly_mult(const polynomial *a, const polynomial *b)
                 tmp_b = tmp_b->next;
                 continue;
            }
-           tmp_b_mul = term_create(tmp_coeff, tmp_exp);
-           answer = poly_add(answer, tmp_b_mul);
+           polynomial *old = tmp_mul;
+           tmp_mul = term_create(tmp_coeff, tmp_exp);
+           poly_destroy(old);
+           old = answer;
+           answer = poly_add(answer, tmp_mul);
+           poly_destroy(old);
            tmp_b = tmp_b->next;
        }
        tmp_b = b;
        tmp_a = tmp_a->next;
     }
-
+    poly_destroy(tmp_mul);
     return answer;
     
+}
+
+polynomial *poly_pow(const polynomial *a, unsigned e)
+{
+    polynomial *answer = term_create(1, 0);
+    polynomial *old = answer;
+    for(unsigned i = 0; i < e; i++)
+    {
+        old = answer;
+        answer = poly_mult(answer, a);
+        poly_destroy(old);
+
+    }
+    return answer;
 }
 
 static void poly_file_print(const polynomial *eqn, FILE *hide_me)

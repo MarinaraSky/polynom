@@ -20,5 +20,6 @@ double poly_eval(const polynomial *p, double x);
 polynomial *poly_add(const polynomial *a, const polynomial *b);
 polynomial *poly_sub(const polynomial *a, const polynomial *b);
 polynomial *poly_mult(const polynomial *a, const polynomial *b);
+polynomial *poly_pow(const polynomial *a, unsigned e);
 
 #endif
