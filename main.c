@@ -11,12 +11,12 @@ int main(void)
 {
     term *nox = term_create(6, 0);
     term *x = term_create(3, 1);
-    term *x2 = term_create(5, 100);
+    term *x2 = term_create(5, 3);
 
     term *noy = term_create(5, 0);
     term *y = term_create(2, 1);
     term *y2 = term_create(-6, 2);
-    term *y3 = term_create(-5, 100);
+    term *y3 = term_create(-5, 3);
     
     term *eval = term_create(2, 2);
 
