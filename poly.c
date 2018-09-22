@@ -1,14 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
 #include "poly.h"
 
 static int *count_unique(const polynomial *a, const polynomial *b);
 static int *get_vals(const polynomial *a);
 static polynomial *array_sum(int *a_array, int *b_array, int *num_of_unique, int max_x);
 static polynomial *array_diff(int *a_array, int *b_array, int *num_of_unique, int max_x);
-//static int get_size(const polynomial *a);
 static int get_high_x(const polynomial *a, const polynomial *b);
 static void poly_file_print(const polynomial *eqn, FILE *hide_me);
 
@@ -184,7 +182,7 @@ polynomial *poly_mult(const polynomial *a, const polynomial *b)
     const polynomial *tmp_a = a;
     const polynomial *tmp_b = b;
     polynomial *answer = term_create(0, 0);
-    polynomial *tmp_mul = calloc(sizeof(term), 1);
+    polynomial *tmp_mul = term_create(1, 0);
     while(tmp_a != NULL)
     {
        while(tmp_b != NULL)
@@ -267,6 +265,10 @@ static void poly_file_print(const polynomial *eqn, FILE *hide_me)
 static polynomial *array_diff(int *a_array, int *b_array, int *num_of_unique, int max_x)
 {
     int *array_of_sums = calloc(sizeof(int), max_x + 1);
+    if(array_of_sums == NULL)
+    {
+        return NULL;
+    }
 
     for(int i = max_x; i >= 0; i--)
     {
@@ -301,6 +303,10 @@ static polynomial *array_diff(int *a_array, int *b_array, int *num_of_unique, in
 static polynomial *array_sum(int *a_array, int *b_array, int *num_of_unique, int max_x)
 {
     int *array_of_sums = calloc(sizeof(int), max_x + 1);
+    if(array_of_sums == NULL)
+    {
+        return NULL;
+    }
 
     for(int i = max_x; i >= 0; i--)
     {
@@ -338,6 +344,10 @@ static polynomial *array_sum(int *a_array, int *b_array, int *num_of_unique, int
 static int *count_unique(const polynomial *a, const polynomial *b)
 {
     int *unique = calloc(get_high_x(a, b) + 1, sizeof(int));
+    if(unique == NULL)
+    {
+        return NULL;
+    }
     while(a != NULL)
     {
         if(unique[a->exp] == 0)
@@ -383,6 +393,10 @@ static int get_high_x(const polynomial *a, const polynomial *b)
 static int *get_vals(const polynomial *a)
 {
     int *vals = calloc(sizeof(int), 512);
+    if(vals == NULL)
+    {
+        return NULL;
+    }
     while(a != NULL)
     {
         if(a->coeff != 0)
@@ -393,28 +407,3 @@ static int *get_vals(const polynomial *a)
     }
     return vals;
 }
-
-/*
-static int get_size(const polynomial *a)
-{
-    int count = 0;
-    while(a != NULL)
-    {
-        count++;
-        a = a->next;
-    }
-    return count;
-}
-
-
-*/
-
-
-
-
-
-
-
-
-
-
